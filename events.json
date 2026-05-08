@@ -1,0 +1,74 @@
+[
+  {
+    "id": "evt_001",
+    "title": "🎬 Ximending Film District",
+    "description": "The heart of Taipei youth culture. Explore retro cinemas, street performers, and unique shops.",
+    "location": "Red House, Ximending",
+    "lat": 25.0421,
+    "lng": 121.5067,
+    "time": "Daily, Open all day",
+    "tags": ["culture", "art"],
+    "image": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800",
+    "active": true
+  },
+  {
+    "id": "evt_002",
+    "title": "🍢 Ximending Street Food",
+    "description": "Famous stinky tofu, bubble tea, and grilled skewers along Wuchang Street.",
+    "location": "Wuchang St, Ximending",
+    "lat": 25.0435,
+    "lng": 121.5078,
+    "time": "Daily, 11:00 AM - 11:00 PM",
+    "tags": ["food", "nightlife"],
+    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "active": true
+  },
+  {
+    "id": "evt_003",
+    "title": "🎨 Red House Theater",
+    "description": "Historic Japanese-era building now housing indie designers, artists, and weekend markets.",
+    "location": "Red House, Ximending",
+    "lat": 25.0418,
+    "lng": 121.5063,
+    "time": "Tue-Sun, 11:00 AM - 9:30 PM",
+    "tags": ["art", "culture", "history"],
+    "image": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800",
+    "active": true
+  },
+  {
+    "id": "evt_004",
+    "title": "🧋 Chun Shui Tang",
+    "description": "The original bubble tea shop.",
+    "location": "Zhonghua Rd, Ximending",
+    "lat": 25.0441,
+    "lng": 121.5055,
+    "time": "Daily, 10:00 AM - 10:00 PM",
+    "tags": ["food"],
+    "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+    "active": true
+  },
+  {
+    "id": "evt_005",
+    "title": "🎵 Street Performance Area",
+    "description": "Live music, breakdancers, and street artists perform every weekend evening.",
+    "location": "Pedestrian Zone, Ximending",
+    "lat": 25.0428,
+    "lng": 121.5072,
+    "time": "Weekends, 6:00 PM - 10:00 PM",
+    "tags": ["music", "culture"],
+    "image": "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800",
+    "active": true
+  },
+  {
+    "id": "evt_006",
+    "title": "👟 Sneaker Street",
+    "description": "Dozens of shops selling limited edition sneakers, streetwear, and vintage clothing.",
+    "location": "Xining S. Rd, Ximending",
+    "lat": 25.0415,
+    "lng": 121.5058,
+    "time": "Daily, 12:00 PM - 9:00 PM",
+    "tags": ["culture"],
+    "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800",
+    "active": true
+  }
+]

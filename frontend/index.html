@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taipei Digital Twin 後台管理</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; color: #333; }
+
+    .header {
+      background: #1a1a2e; color: white;
+      padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header span { font-size: 24px; }
+
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: white; border-radius: 12px; padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .stat-num { font-size: 36px; font-weight: 700; color: #1a1a2e; }
+    .stat-label { color: #888; font-size: 13px; margin-top: 4px; }
+
+    .card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .card-header h2 { font-size: 16px; font-weight: 600; }
+
+    .btn {
+      padding: 8px 16px; border-radius: 8px; border: none;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #1a1a2e; color: white; }
+    .btn-success { background: #52c41a; color: white; }
+    .btn-danger  { background: #ff4d4f; color: white; }
+    .btn-warning { background: #faad14; color: white; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #fafafa; padding: 12px 16px; text-align: left; font-size: 13px; color: #888; font-weight: 500; }
+    td { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; font-size: 14px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 500; margin: 2px;
+      background: #e6f4ff; color: #1677ff;
+    }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px;
+    }
+    .badge-active   { background: #f6ffed; color: #52c41a; }
+    .badge-inactive { background: #fff2f0; color: #ff4d4f; }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal {
+      background: white; border-radius: 16px;
+      width: 560px; max-width: 95vw; max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h3 { font-size: 18px; font-weight: 600; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9;
+      border-radius: 8px; font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: #1a1a2e;
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .close-btn {
+      background: none; border: none; font-size: 20px;
+      cursor: pointer; color: #888; padding: 4px;
+    }
+    .close-btn:hover { color: #333; }
+
+    .loading { text-align: center; padding: 40px; color: #888; }
+    .empty   { text-align: center; padding: 40px; color: #aaa; font-size: 15px; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #1a1a2e; color: white;
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; z-index: 999;
+      animation: slideIn 0.3s ease;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab {
+      padding: 8px 18px; border-radius: 8px; border: 1px solid #d9d9d9;
+      background: white; cursor: pointer; font-size: 14px; font-weight: 500;
+    }
+    .tab.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .pill {
+      display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px;
+      border-radius: 9px; background: #ff4d4f; color: white; font-size: 11px; text-align: center;
+    }
+    .badge-pending   { background: #fffbe6; color: #d48806; }
+    .badge-approved  { background: #f6ffed; color: #52c41a; }
+    .badge-rejected  { background: #fff2f0; color: #ff4d4f; }
+    .badge-cancelled { background: #f5f5f5; color: #888; }
+    .login-box { max-width: 420px; margin: 80px auto; padding: 28px; }
+    .login-box input { width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 14px; margin: 12px 0; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <span>🗺️</span>
+    <h1>Taipei Digital Twin 後台管理</h1>
+  </div>
+
+  <div class="container">
+
+    <!-- 登入 -->
+    <div v-if="!adminKey" class="card login-box">
+      <h2 style="font-size:18px">管理員登入</h2>
+      <input v-model="keyInput" type="password" placeholder="ADMIN_KEY" @keyup.enter="login" />
+      <button class="btn btn-primary" style="width:100%" @click="login">登入</button>
+    </div>
+
+    <template v-else>
+    <div class="tabs">
+      <button class="tab" :class="{active: tab==='events'}" @click="tab='events'">🎯 活動 / 店家</button>
+      <button class="tab" :class="{active: tab==='meetups'}" @click="tab='meetups'; fetchMeetups()">
+        👥 組隊審核<span class="pill" v-if="pendingCount">{{ pendingCount }}</span>
+      </button>
+      <button class="tab" style="margin-left:auto" @click="logout">登出</button>
+    </div>
+
+    <div v-show="tab==='events'">
+
+    <!-- 統計卡片 -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-num">{{ events.length }}</div>
+        <div class="stat-label">總活動數</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:#52c41a">{{ activeCount }}</div>
+        <div class="stat-label">啟用中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:#ff4d4f">{{ inactiveCount }}</div>
+        <div class="stat-label">已停用</div>
+      </div>
+    </div>
+
+    <!-- 活動列表 -->
+    <div class="card">
+      <div class="card-header">
+        <h2>🎯 活動 / 店家管理</h2>
+        <button class="btn btn-primary" @click="openCreate">＋ 新增活動</button>
+      </div>
+
+      <div v-if="loading" class="loading">載入中...</div>
+
+      <div v-else-if="events.length === 0" class="empty">
+        還沒有任何活動，點擊「新增活動」開始！
+      </div>
+
+      <table v-else>
+        <thead>
+          <tr>
+            <th>活動名稱</th>
+            <th>位置</th>
+            <th>標籤</th>
+            <th>時間</th>
+            <th>狀態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="ev in events" :key="ev.id">
+            <td>
+              <div style="font-weight:500">{{ ev.title }}</div>
+              <div style="color:#aaa;font-size:12px;margin-top:2px">{{ ev.description?.slice(0,40) }}...</div>
+            </td>
+            <td style="color:#888;font-size:13px">
+              📍 {{ ev.location }}<br>
+              <span style="font-size:11px">{{ ev.lat?.toFixed(4) }}, {{ ev.lng?.toFixed(4) }}</span>
+            </td>
+            <td>
+              <span class="tag" v-for="t in ev.tags" :key="t">{{ t }}</span>
+            </td>
+            <td style="font-size:13px;color:#666">{{ ev.time }}</td>
+            <td>
+              <span :class="ev.active ? 'badge badge-active' : 'badge badge-inactive'">
+                {{ ev.active ? '✅ 啟用' : '⏸ 停用' }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-warning btn-sm" @click="openEdit(ev)">編輯</button>
+                <button class="btn btn-sm" :style="ev.active ? 'background:#ff4d4f;color:white' : 'background:#52c41a;color:white'"
+                  @click="toggleEvent(ev)">
+                  {{ ev.active ? '停用' : '啟用' }}
+                </button>
+                <button class="btn btn-danger btn-sm" @click="confirmDelete(ev)">刪除</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    </div>
+
+    <!-- 組隊審核 -->
+    <div v-show="tab==='meetups'">
+      <div class="card">
+        <div class="card-header">
+          <h2>👥 組隊審核</h2>
+          <select v-model="meetupFilter" @change="fetchMeetups" style="padding:6px 10px;border-radius:8px;border:1px solid #d9d9d9">
+            <option value="pending">待審核</option>
+            <option value="approved">已核准</option>
+            <option value="rejected">已拒絕</option>
+            <option value="cancelled">已取消</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+
+        <div v-if="loadingMeetups" class="loading">載入中...</div>
+        <div v-else-if="meetups.length === 0" class="empty">這個分類目前沒有組隊</div>
+
+        <table v-else>
+          <thead>
+            <tr>
+              <th>組隊</th><th>發起人</th><th>時間 / 地點</th><th>人數</th><th>狀態</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="m in meetups" :key="m.id">
+              <td style="max-width:280px">
+                <div style="font-weight:500">{{ m.title }}</div>
+                <div style="color:#888;font-size:12px;margin-top:2px;white-space:pre-wrap">{{ m.description }}</div>
+                <span class="tag" v-for="t in m.tags" :key="t">{{ t }}</span>
+              </td>
+              <td style="font-size:13px">{{ m.host_name }}</td>
+              <td style="font-size:13px;color:#666">
+                ⏰ {{ formatTime(m.starts_at) }}<br>
+                📍 {{ m.location || '—' }}<br>
+                <span style="font-size:11px;color:#aaa">{{ m.lat?.toFixed(4) }}, {{ m.lng?.toFixed(4) }}</span>
+              </td>
+              <td style="font-size:13px">{{ m.member_count }} / {{ m.max_people }}</td>
+              <td>
+                <span :class="'badge badge-' + m.status">{{ statusLabel[m.status] }}</span>
+                <div v-if="m.reject_reason" style="font-size:11px;color:#ff4d4f;margin-top:4px">{{ m.reject_reason }}</div>
+              </td>
+              <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-success btn-sm" v-if="m.status==='pending' || m.status==='rejected'"
+                    @click="approveMeetup(m)">核准</button>
+                  <button class="btn btn-danger btn-sm" v-if="m.status==='pending' || m.status==='approved'"
+                    @click="rejectMeetup(m)">拒絕</button>
+                  <button class="btn btn-warning btn-sm" v-if="m.status==='approved'"
+                    @click="cancelMeetup(m)">下架</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    </template>
+
+  </div>
+
+  <!-- 新增 / 編輯 Modal -->
+  <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>{{ editingId ? '編輯活動' : '新增活動' }}</h3>
+        <button class="close-btn" @click="closeModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>活動名稱 *</label>
+          <input v-model="form.title" placeholder="例：🍜 西門町美食節" />
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea v-model="form.description" placeholder="活動描述..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>地點名稱</label>
+          <input v-model="form.location" placeholder="例：西門町行人專區" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>緯度 (Latitude) *</label>
+            <input v-model="form.lat" type="number" step="0.0001" placeholder="25.0424" />
+          </div>
+          <div class="form-group">
+            <label>經度 (Longitude) *</label>
+            <input v-model="form.lng" type="number" step="0.0001" placeholder="121.5065" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>時間</label>
+          <input v-model="form.time" placeholder="例：Daily, 10:00 AM - 10:00 PM" />
+        </div>
+        <div class="form-group">
+          <label>標籤（逗號分隔）</label>
+          <input v-model="form.tagsInput" placeholder="例：food, culture, music" />
+        </div>
+        <div class="form-group">
+          <label>圖片 URL</label>
+          <input v-model="form.image" placeholder="https://..." />
+        </div>
+        <div class="form-group" v-if="editingId">
+          <label>狀態</label>
+          <select v-model="form.active">
+            <option :value="true">✅ 啟用</option>
+            <option :value="false">⏸ 停用</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0" @click="closeModal">取消</button>
+        <button class="btn btn-primary" @click="saveEvent" :disabled="saving">
+          {{ saving ? '儲存中...' : (editingId ? '更新' : '新增') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast" v-if="toastMsg">{{ toastMsg }}</div>
+
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+// ===== 換成你的 Render URL =====
+const API_BASE = 'https://taipei-backend-ib04.onrender.com';
+
+createApp({
+  setup() {
+    const events    = ref([]);
+    const loading   = ref(true);
+    const showModal = ref(false);
+    const saving    = ref(false);
+    const editingId = ref(null);
+    const toastMsg  = ref('');
+
+    // ===== 管理員登入 / 組隊審核 =====
+    const adminKey  = ref(localStorage.getItem('taipei_admin_key') || '');
+    const keyInput  = ref('');
+    const tab       = ref('events');
+    const meetups   = ref([]);
+    const meetupFilter   = ref('pending');
+    const loadingMeetups = ref(false);
+    const pendingCount   = ref(0);
+    const statusLabel = { pending: '⏳ 待審核', approved: '✅ 已核准', rejected: '⛔ 已拒絕', cancelled: '🚫 已取消' };
+
+    const form = ref({
+      title: '', description: '', location: '',
+      lat: '', lng: '', time: '', tagsInput: '', image: '', active: true,
+    });
+
+    const activeCount   = computed(() => events.value.filter(e => e.active).length);
+    const inactiveCount = computed(() => events.value.filter(e => !e.active).length);
+
+    const showToast = (msg) => {
+      toastMsg.value = msg;
+      setTimeout(() => toastMsg.value = '', 2500);
+    };
+
+    const adminHeaders = () => ({ 'Content-Type': 'application/json', 'x-admin-key': adminKey.value });
+
+    const logout = () => {
+      adminKey.value = '';
+      localStorage.removeItem('taipei_admin_key');
+    };
+
+    const login = () => {
+      if (!keyInput.value.trim()) return;
+      adminKey.value = keyInput.value.trim();
+      localStorage.setItem('taipei_admin_key', adminKey.value);
+      keyInput.value = '';
+      fetchEvents();
+      fetchMeetups();
+    };
+
+    // 管理 API 共用：401 代表密碼錯誤，直接登出
+    const adminFetch = async (path, method = 'GET', body) => {
+      const r = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers: adminHeaders(),
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (r.status === 401) {
+        logout();
+        showToast('❌ 管理員密碼錯誤，請重新登入');
+        return null;
+      }
+      return r.json();
+    };
+
+    const formatTime = (iso) =>
+      new Date(iso).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+
+    const refreshPendingCount = async () => {
+      try {
+        const j = await adminFetch('/api/admin/meetups?status=pending');
+        if (j?.success) pendingCount.value = j.data.length;
+      } catch (e) { /* 忽略，下次再更新 */ }
+    };
+
+    const fetchMeetups = async () => {
+      loadingMeetups.value = true;
+      try {
+        const j = await adminFetch(`/api/admin/meetups?status=${meetupFilter.value}`);
+        if (j?.success) {
+          meetups.value = j.data;
+          if (meetupFilter.value === 'pending') pendingCount.value = j.data.length;
+          else refreshPendingCount();
+        }
+      } catch (e) {
+        showToast('❌ 無法讀取組隊');
+      } finally {
+        loadingMeetups.value = false;
+      }
+    };
+
+    const approveMeetup = async (m) => {
+      const j = await adminFetch(`/api/admin/meetups/${m.id}/approve`, 'PATCH');
+      if (j?.success) { showToast('✅ 已核准'); fetchMeetups(); }
+      else if (j) showToast('❌ ' + (j.message || '操作失敗'));
+    };
+
+    const rejectMeetup = async (m) => {
+      const reason = prompt(`拒絕「${m.title}」的原因（會顯示給發起人，可留空）：`);
+      if (reason === null) return;
+      const j = await adminFetch(`/api/admin/meetups/${m.id}/reject`, 'PATCH', { reason });
+      if (j?.success) { showToast('⛔ 已拒絕'); fetchMeetups(); }
+      else if (j) showToast('❌ ' + (j.message || '操作失敗'));
+    };
+
+    const cancelMeetup = async (m) => {
+      if (!confirm(`確定要下架「${m.title}」嗎？已加入的人會看不到它。`)) return;
+      const j = await adminFetch(`/api/admin/meetups/${m.id}/cancel`, 'PATCH');
+      if (j?.success) { showToast('🚫 已下架'); fetchMeetups(); }
+      else if (j) showToast('❌ ' + (j.message || '操作失敗'));
+    };
+
+    // 讀取所有活動
+    const fetchEvents = async () => {
+      loading.value = true;
+      try {
+        const r = await fetch(`${API_BASE}/api/events`);
+        const j = await r.json();
+        events.value = j.data || [];
+      } catch (e) {
+        showToast('❌ 無法連線到後端，請確認 API 網址');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // 開啟新增 Modal
+    const openCreate = () => {
+      editingId.value = null;
+      form.value = { title:'', description:'', location:'', lat:'', lng:'', time:'', tagsInput:'', image:'', active:true };
+      showModal.value = true;
+    };
+
+    // 開啟編輯 Modal
+    const openEdit = (ev) => {
+      editingId.value = ev.id;
+      form.value = {
+        title:       ev.title       || '',
+        description: ev.description || '',
+        location:    ev.location    || '',
+        lat:         ev.lat         || '',
+        lng:         ev.lng         || '',
+        time:        ev.time        || '',
+        tagsInput:   (ev.tags || []).join(', '),
+        image:       ev.image       || '',
+        active:      ev.active ?? true,
+      };
+      showModal.value = true;
+    };
+
+    const closeModal = () => { showModal.value = false; };
+
+    // 儲存（新增或更新）
+    const saveEvent = async () => {
+      if (!form.value.title || !form.value.lat || !form.value.lng) {
+        showToast('⚠️ 請填寫名稱、緯度、經度');
+        return;
+      }
+      saving.value = true;
+      try {
+        const payload = {
+          ...form.value,
+          tags: form.value.tagsInput.split(',').map(t => t.trim()).filter(Boolean),
+        };
+        delete payload.tagsInput;
+
+        const url    = editingId.value ? `${API_BASE}/api/events/${editingId.value}` : `${API_BASE}/api/events`;
+        const method = editingId.value ? 'PUT' : 'POST';
+
+        const r = await fetch(url, {
+          method,
+          headers: adminHeaders(),
+          body: JSON.stringify(payload),
+        });
+        if (r.status === 401) { logout(); showToast('❌ 管理員密碼錯誤，請重新登入'); return; }
+        const j = await r.json();
+
+        if (j.success) {
+          showToast(editingId.value ? '✅ 已更新' : '✅ 已新增');
+          closeModal();
+          fetchEvents();
+        } else {
+          showToast('❌ 儲存失敗');
+        }
+      } catch (e) {
+        showToast('❌ 網路錯誤');
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    // 切換啟用狀態
+    const toggleEvent = async (ev) => {
+      try {
+        const r = await fetch(`${API_BASE}/api/events/${ev.id}/toggle`, { method: 'PATCH', headers: adminHeaders() });
+        const j = await r.json();
+        if (j.success) {
+          ev.active = j.data.active;
+          showToast(ev.active ? '✅ 已啟用' : '⏸ 已停用');
+        }
+      } catch (e) {
+        showToast('❌ 操作失敗');
+      }
+    };
+
+    // 刪除活動
+    const confirmDelete = async (ev) => {
+      if (!confirm(`確定要刪除「${ev.title}」嗎？`)) return;
+      try {
+        const r = await fetch(`${API_BASE}/api/events/${ev.id}`, { method: 'DELETE', headers: adminHeaders() });
+        const j = await r.json();
+        if (j.success) {
+          showToast('🗑️ 已刪除');
+          fetchEvents();
+        }
+      } catch (e) {
+        showToast('❌ 刪除失敗');
+      }
+    };
+
+    onMounted(() => {
+      if (adminKey.value) { fetchEvents(); fetchMeetups(); }
+    });
+
+    return {
+      events, loading, showModal, saving, editingId,
+      form, toastMsg, activeCount, inactiveCount,
+      adminKey, keyInput, tab, meetups, meetupFilter, loadingMeetups, pendingCount, statusLabel,
+      login, logout, fetchMeetups, approveMeetup, rejectMeetup, cancelMeetup, formatTime,
+      openCreate, openEdit, closeModal, saveEvent, toggleEvent, confirmDelete,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

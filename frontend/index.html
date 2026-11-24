@@ -342,8 +342,8 @@
           <input v-model="form.time" placeholder="例：Daily, 10:00 AM - 10:00 PM" />
         </div>
         <div class="form-group">
-          <label>標籤（逗號分隔）</label>
-          <input v-model="form.tagsInput" placeholder="例：food, culture, music" />
+          <label>標籤（逗號分隔，支援天氣與交通權重）</label>
+          <input v-model="form.tagsInput" placeholder="例：rainy, indoor, mrt, food（晴天請填 sunny, outdoor）" />
         </div>
         <div class="form-group">
           <label>圖片 URL</label>
@@ -375,7 +375,7 @@
 const { createApp, ref, computed, onMounted } = Vue;
 
 // ===== 換成你的 Render URL =====
-const API_BASE = 'https://taipei-backend-ib04.onrender.com';
+const API_BASE = 'https://tpdgt.onrender.com';
 
 createApp({
   setup() {
